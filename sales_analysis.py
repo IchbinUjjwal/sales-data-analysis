@@ -1,267 +1,488 @@
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 
 
-# --------------------------------------------------
-# 1. LOAD THE DATA
-# --------------------------------------------------
+# Load the real Online Retail dataset
+print("Loading Online Retail dataset...")
 
-df = pd.read_csv("sales_data.csv")
 
-print("\nFIRST 5 ROWS:")
+df = pd.read_excel("data/Online Retail.xlsx")
+
+
+print("Dataset loaded successfully!")
+
+
+# Show the first 5 rows
+print("\nFirst 5 rows:")
+
 print(df.head())
 
 
-# --------------------------------------------------
-# 2. UNDERSTAND THE DATA
-# --------------------------------------------------
+# Show the size of the dataset
+print("\nDataset size:")
 
-print("\nDATASET SHAPE:")
 print(df.shape)
 
-print("\nCOLUMN NAMES:")
-print(df.columns)
+# -----------------------------------------
+# EXPLORE THE DATASET
+# -----------------------------------------
 
-print("\nDATA TYPES:")
+print("\nColumn names:")
+
+print(df.columns.tolist())
+
+print("\nData types:")
+
 print(df.dtypes)
 
-print("\nMISSING VALUES:")
+print("\nMissing values:")
+
 print(df.isnull().sum())
 
+print("\nDuplicate rows:")
 
-# --------------------------------------------------
-# 3. CONVERT DATE COLUMN
-# --------------------------------------------------
+duplicates = df.duplicated().sum()
 
-df["date"] = pd.to_datetime(df["date"])
+print(duplicates)
 
-print("\nDATE COLUMN AFTER CONVERSION:")
-print(df["date"].head())
+print("\nStatistical summary:")
 
-
-# --------------------------------------------------
-# 4. CALCULATE REVENUE
-# --------------------------------------------------
-
-# Revenue before discount
-df["gross_revenue"] = df["units_sold"] * df["unit_price"]
-
-# Discount amount
-df["discount_amount"] = df["gross_revenue"] * df["discount"]
-
-# Final revenue after discount
-df["revenue"] = df["gross_revenue"] - df["discount_amount"]
-
-print("\nDATA WITH REVENUE:")
 print(
     df[
         [
-            "product",
-            "units_sold",
-            "unit_price",
-            "discount",
-            "revenue"
+            "Quantity",
+            "UnitPrice"
+        ]
+    ].describe()
+)
+# -----------------------------------------
+# SAVE ORIGINAL ROW COUNT
+# -----------------------------------------
+
+original_rows = len(df)
+
+print("\nOriginal number of rows:")
+print(original_rows)
+# -----------------------------------------
+# REMOVE DUPLICATES
+# -----------------------------------------
+
+df = df.drop_duplicates()
+
+print("\nRows after removing duplicates:")
+print(len(df))
+# -----------------------------------------
+# REMOVE MISSING PRODUCT DESCRIPTIONS
+# -----------------------------------------
+
+df = df.dropna(
+    subset=["Description"]
+)
+
+print("\nRows after removing missing descriptions:")
+print(len(df))
+# -----------------------------------------
+# REMOVE CANCELLED ORDERS
+# -----------------------------------------
+
+df = df[
+    ~df["InvoiceNo"]
+    .astype(str)
+    .str.startswith("C")
+]
+
+print("\nRows after removing cancelled orders:")
+print(len(df))
+# -----------------------------------------
+# REMOVE INVALID QUANTITIES
+# -----------------------------------------
+
+df = df[
+    df["Quantity"] > 0
+]
+
+print("\nRows after removing non-positive quantities:")
+print(len(df))
+# -----------------------------------------
+# REMOVE INVALID PRICES
+# -----------------------------------------
+
+df = df[
+    df["UnitPrice"] > 0
+]
+
+print("\nRows after removing non-positive prices:")
+print(len(df))
+# -----------------------------------------
+# CLEANING SUMMARY
+# -----------------------------------------
+
+cleaned_rows = len(df)
+
+rows_removed = original_rows - cleaned_rows
+
+percentage_removed = (
+    rows_removed / original_rows
+) * 100
+
+
+print("\n===== CLEANING SUMMARY =====")
+
+print(f"Original rows: {original_rows:,}")
+
+print(f"Cleaned rows: {cleaned_rows:,}")
+
+print(f"Rows removed: {rows_removed:,}")
+
+print(
+    f"Percentage removed: "
+    f"{percentage_removed:.2f}%"
+)
+# -----------------------------------------
+# CREATE REVENUE COLUMN
+# -----------------------------------------
+
+df["Revenue"] = (
+    df["Quantity"]
+    *
+    df["UnitPrice"]
+)
+
+
+print("\nRevenue example:")
+
+print(
+    df[
+        [
+            "Description",
+            "Quantity",
+            "UnitPrice",
+            "Revenue"
         ]
     ].head()
 )
+# -----------------------------------------
+# BUSINESS KPIs
+# -----------------------------------------
+
+total_revenue = df["Revenue"].sum()
+
+total_units = df["Quantity"].sum()
+
+total_orders = df["InvoiceNo"].nunique()
+
+unique_products = df["StockCode"].nunique()
+
+average_transaction_revenue = df["Revenue"].mean()
 
 
-# --------------------------------------------------
-# 5. BASIC STATISTICS
-# --------------------------------------------------
+print("\n===== BUSINESS KPIs =====")
 
-total_revenue = df["revenue"].sum()
-
-average_revenue = df["revenue"].mean()
-
-total_units = df["units_sold"].sum()
-
-highest_sale = df["revenue"].max()
-
-
-print("\nSALES SUMMARY")
-
-print(f"Total Revenue: €{total_revenue:.2f}")
-
-print(f"Average Revenue per Sale: €{average_revenue:.2f}")
-
-print(f"Total Units Sold: {total_units}")
-
-print(f"Highest Single Sale: €{highest_sale:.2f}")
-
-
-# --------------------------------------------------
-# 6. REVENUE BY PRODUCT
-# --------------------------------------------------
-
-product_revenue = (
-    df.groupby("product")["revenue"]
-    .sum()
-    .sort_values(ascending=False)
-)
-
-print("\nREVENUE BY PRODUCT:")
-print(product_revenue)
-
-
-# Find the best product
-best_product = product_revenue.idxmax()
-
-print(f"\nBest Product by Revenue: {best_product}")
-
-
-# --------------------------------------------------
-# 7. REVENUE BY REGION
-# --------------------------------------------------
-
-region_revenue = (
-    df.groupby("region")["revenue"]
-    .sum()
-    .sort_values(ascending=False)
-)
-
-print("\nREVENUE BY REGION:")
-print(region_revenue)
-
-
-best_region = region_revenue.idxmax()
-
-print(f"\nBest Performing Region: {best_region}")
-
-
-# --------------------------------------------------
-# 8. CREATE A MONTH COLUMN
-# --------------------------------------------------
-
-df["month"] = df["date"].dt.strftime("%Y-%m")
-
-monthly_revenue = df.groupby("month")["revenue"].sum()
-
-print("\nMONTHLY REVENUE:")
-print(monthly_revenue)
-
-
-# --------------------------------------------------
-# 9. NUMPY ANALYSIS
-# --------------------------------------------------
-
-revenue_array = df["revenue"].to_numpy()
-
-numpy_average = np.mean(revenue_array)
-
-numpy_maximum = np.max(revenue_array)
-
-numpy_minimum = np.min(revenue_array)
-
-
-print("\nNUMPY ANALYSIS:")
-
-print(f"Average Revenue: €{numpy_average:.2f}")
-
-print(f"Maximum Revenue: €{numpy_maximum:.2f}")
-
-print(f"Minimum Revenue: €{numpy_minimum:.2f}")
-
-
-# Count sales above average
-above_average_sales = np.sum(
-    revenue_array > numpy_average
+print(
+    f"Total Revenue: "
+    f"£{total_revenue:,.2f}"
 )
 
 print(
-    f"Number of Sales Above Average: "
-    f"{above_average_sales}"
+    f"Total Units Sold: "
+    f"{total_units:,}"
 )
 
+print(
+    f"Total Orders: "
+    f"{total_orders:,}"
+)
 
-# --------------------------------------------------
-# 10. MATPLOTLIB - REVENUE BY PRODUCT
-# --------------------------------------------------
+print(
+    f"Unique Products: "
+    f"{unique_products:,}"
+)
 
-plt.figure(figsize=(8, 5))
+print(
+    f"Average Revenue per Transaction Row: "
+    f"£{average_transaction_revenue:,.2f}"
+)
+# -----------------------------------------
+# TOP 10 PRODUCTS BY REVENUE
+# -----------------------------------------
 
-product_revenue.plot(kind="bar")
+product_revenue = (
+    df.groupby("Description")["Revenue"]
+    .sum()
+    .sort_values(ascending=False)
+)
 
-plt.title("Total Revenue by Product")
+top_products = product_revenue.head(10)
 
-plt.xlabel("Product")
+print("\n===== TOP 10 PRODUCTS BY REVENUE =====")
 
-plt.ylabel("Revenue (€)")
+print(top_products)
 
-plt.xticks(rotation=0)
+# -----------------------------------------
+# CHART 1: TOP PRODUCTS BY REVENUE
+# -----------------------------------------
+
+plt.figure(figsize=(10, 6))
+
+top_products.sort_values().plot(
+    kind="barh"
+)
+
+plt.title("Top 10 Products by Revenue")
+
+plt.xlabel("Revenue (£)")
+
+plt.ylabel("Product")
 
 plt.tight_layout()
 
-plt.savefig("revenue_by_product.png")
+plt.savefig(
+    "images/top_products.png",
+    dpi=300
+)
+
+plt.show()
+# -----------------------------------------
+# REVENUE BY COUNTRY
+# -----------------------------------------
+
+country_revenue = (
+    df.groupby("Country")["Revenue"]
+    .sum()
+    .sort_values(ascending=False)
+)
+
+print("\n===== TOP 10 COUNTRIES BY REVENUE =====")
+
+print(
+    country_revenue.head(10)
+)
+# -----------------------------------------
+# CHART 2: INTERNATIONAL MARKETS
+# -----------------------------------------
+
+international_revenue = (
+    country_revenue
+    .drop(
+        "United Kingdom",
+        errors="ignore"
+    )
+    .head(10)
+)
+
+
+plt.figure(figsize=(10, 6))
+
+
+international_revenue.sort_values().plot(
+    kind="barh"
+)
+
+
+plt.title(
+    "Top 10 International Markets by Revenue"
+)
+
+plt.xlabel(
+    "Revenue (£)"
+)
+
+plt.ylabel(
+    "Country"
+)
+
+plt.tight_layout()
+
+
+plt.savefig(
+    "images/top_countries.png",
+    dpi=300
+)
 
 plt.show()
 
+# -----------------------------------------
+# MONTHLY REVENUE ANALYSIS
+# -----------------------------------------
 
-# --------------------------------------------------
-# 11. MATPLOTLIB - MONTHLY REVENUE
-# --------------------------------------------------
+df["InvoiceDate"] = pd.to_datetime(
+    df["InvoiceDate"]
+)
 
-plt.figure(figsize=(8, 5))
+
+df["Month"] = (
+    df["InvoiceDate"]
+    .dt
+    .to_period("M")
+)
+
+
+monthly_revenue = (
+    df.groupby("Month")["Revenue"]
+    .sum()
+)
+
+
+print("\n===== MONTHLY REVENUE =====")
+
+print(monthly_revenue)
+
+# -----------------------------------------
+# CHART 3: MONTHLY REVENUE
+# -----------------------------------------
+
+plt.figure(figsize=(10, 6))
+
 
 monthly_revenue.plot(
     kind="line",
     marker="o"
 )
 
-plt.title("Monthly Revenue Trend")
 
-plt.xlabel("Month")
-
-plt.ylabel("Revenue (€)")
-
-plt.grid(alpha=0.3)
-
-plt.tight_layout()
-
-plt.savefig("monthly_revenue.png")
-
-plt.show()
-
-
-# --------------------------------------------------
-# 12. UNITS SOLD VS REVENUE
-# --------------------------------------------------
-
-plt.figure(figsize=(8, 5))
-
-plt.scatter(
-    df["units_sold"],
-    df["revenue"],
-    alpha=0.7
+plt.title(
+    "Monthly Revenue Trend"
 )
 
-plt.title("Units Sold vs Revenue")
+plt.xlabel(
+    "Month"
+)
 
-plt.xlabel("Units Sold")
+plt.ylabel(
+    "Revenue (£)"
+)
 
-plt.ylabel("Revenue (€)")
+plt.grid(
+    alpha=0.3
+)
 
 plt.tight_layout()
 
-plt.savefig("units_vs_revenue.png")
+
+plt.savefig(
+    "images/monthly_revenue.png",
+    dpi=300
+)
+
 
 plt.show()
 
+# -----------------------------------------
+# AVERAGE ORDER VALUE
+# -----------------------------------------
 
-# --------------------------------------------------
-# 13. SAVE CLEANED DATA
-# --------------------------------------------------
+order_revenue = (
+    df.groupby("InvoiceNo")["Revenue"]
+    .sum()
+)
+
+
+average_order_value = (
+    order_revenue.mean()
+)
+
+
+print("\n===== AVERAGE ORDER VALUE =====")
+
+
+print(
+    f"Average Order Value: "
+    f"£{average_order_value:,.2f}"
+)
+# -----------------------------------------
+# REVENUE BY DAY OF WEEK
+# -----------------------------------------
+
+df["DayOfWeek"] = (
+    df["InvoiceDate"]
+    .dt
+    .day_name()
+)
+
+
+day_revenue = (
+    df.groupby("DayOfWeek")["Revenue"]
+    .sum()
+)
+
+
+day_order = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday"
+]
+
+
+day_revenue = (
+    day_revenue
+    .reindex(day_order)
+    .dropna()
+)
+
+
+print("\n===== REVENUE BY DAY =====")
+
+print(day_revenue)
+
+# -----------------------------------------
+# CHART 4: REVENUE BY DAY
+# -----------------------------------------
+
+plt.figure(figsize=(10, 6))
+
+
+day_revenue.plot(
+    kind="bar"
+)
+
+
+plt.title(
+    "Revenue by Day of Week"
+)
+
+plt.xlabel(
+    "Day"
+)
+
+plt.ylabel(
+    "Revenue (£)"
+)
+
+plt.xticks(
+    rotation=45
+)
+
+plt.tight_layout()
+
+
+plt.savefig(
+    "images/revenue_by_day.png",
+    dpi=300
+)
+
+
+plt.show()
+
+# -----------------------------------------
+# SAVE CLEANED DATA
+# -----------------------------------------
 
 df.to_csv(
-    "cleaned_sales_data.csv",
+    "data/cleaned_online_retail.csv",
     index=False
 )
+
+
+print(
+    "\nCleaned dataset saved successfully!"
+)
+
 
 print(
     "\nAnalysis completed successfully!"
 )
 
-print(
-    "Cleaned dataset saved as cleaned_sales_data.csv"
-)

@@ -1,74 +1,166 @@
-# 📊 Sales Data Analysis
+# Online Retail Sales Data Analysis
 
 ## Project Overview
 
-This is a beginner data analysis project created using Python, Pandas, NumPy and Matplotlib.
+This project analyses a real-world online retail dataset using Python, Pandas, NumPy and Matplotlib.
 
-The purpose of this project is to analyse sales data and explore patterns in product performance, regional sales and revenue over time.
+The aim of the project is to clean and explore transactional sales data, identify important business patterns, and create visualisations that make the results easier to understand.
 
-I created this project as part of my journey into Data Science and to practise working with data using Python.
+I built this project as part of my learning journey in Data Science and to practise working with a large real-world dataset.
 
-## 🛠 Technologies Used
+## Dataset
 
-- Python
-- Pandas
-- NumPy
-- Matplotlib
+The project uses the **Online Retail Dataset** from the UCI Machine Learning Repository.
 
-## 📁 Dataset
+The dataset contains more than 500,000 transaction records from a UK-based online retailer.
 
-The dataset contains sales information including:
+Main columns include:
 
-- Date
-- Product
-- Region
-- Units Sold
-- Unit Price
-- Discount
+* Invoice number
+* Product code
+* Product description
+* Quantity
+* Invoice date
+* Unit price
+* Customer ID
+* Country
 
-The project calculates additional information such as gross revenue, discount amount and final revenue.
+Dataset source:
 
-> Note: The dataset used in this project is a synthetic dataset created for learning and demonstration purposes.
+https://archive.ics.uci.edu/dataset/352/online+retail
 
-## 🔍 Questions Explored
+## Tools Used
 
-This project explores questions such as:
+* Python
+* Pandas
+* NumPy
+* Matplotlib
+* OpenPyXL
+* VS Code
+* Git & GitHub
 
-- Which product generates the highest revenue?
-- Which region performs the best?
-- How does revenue change over time?
-- What is the average revenue per sale?
-- How many sales are above the average revenue?
+## Data Cleaning
 
-## 📈 Revenue by Product
+Before analysing the data, I performed several cleaning steps:
 
-![Revenue by Product](revenue_by_product.png)
+* Removed duplicate rows
+* Removed rows with missing product descriptions
+* Removed cancelled invoices
+* Removed non-positive quantities
+* Removed non-positive unit prices
+* Created a new Revenue column
 
-## 📈 Monthly Revenue Trend
+Revenue was calculated as:
 
-![Monthly Revenue](monthly_revenue.png)
+`Revenue = Quantity × Unit Price`
 
-## 📊 Units Sold vs Revenue
+## Analysis Performed
+## Key Findings
 
-![Units Sold vs Revenue](units_vs_revenue.png)
+After cleaning and analysing the Online Retail dataset, I identified several key insights:
 
-## 🧹 Data Processing
+- The original dataset contained 541,909 transaction records. After removing duplicates, cancelled transactions, missing product descriptions and invalid quantity or price values, 524,878 records remained. Approximately 3.14% of the original data was removed during cleaning.
 
-The Python script performs several data processing steps:
+- The cleaned dataset generated approximately £10.64 million in total revenue from 19,960 orders and more than 5.57 million units sold.
 
-1. Loads the CSV dataset using Pandas.
-2. Checks the structure and missing values.
-3. Converts the date column into datetime format.
-4. Calculates gross revenue.
-5. Calculates discounts.
-6. Calculates final revenue.
-7. Groups sales by product and region.
-8. Performs basic statistical analysis using NumPy.
-9. Creates visualisations using Matplotlib.
+- The average order value was approximately £533.17.
 
-## 🚀 How to Run the Project
+- The United Kingdom was by far the largest market, generating approximately £9 million in revenue. Among international markets, the Netherlands, Ireland, Germany and France were some of the strongest contributors.
 
-Clone or download this repository and install the required libraries:
+- Revenue increased significantly toward the later months of 2011, with November 2011 generating approximately £1.15 million, making it the strongest full month in the analysed period.
+
+- Product revenue was concentrated among several high-performing items. DOTCOM POSTAGE generated the highest revenue, followed by products such as REGENCY CAKESTAND 3 TIER and PAPER CRAFT, LITTLE BIRDIE.
+
+These findings demonstrate how transactional data can be transformed into useful information about product performance, market contribution and sales trends.
+
+## Visualisations
+
+### Top 10 Products by Revenue
+
+![Top Products](images/top_products.png)
+
+### Top International Markets
+
+![Top Countries](images/top_countries.png)
+
+### Monthly Revenue Trend
+
+![Monthly Revenue](images/monthly_revenue.png)
+
+### Revenue by Day of Week
+
+![Revenue by Day](images/revenue_by_day.png)
+
+## Project Structure
+
+```text
+sales-data-analysis/
+│
+├── data/
+│   └── dataset files
+│
+├── images/
+│   ├── top_products.png
+│   ├── top_countries.png
+│   ├── monthly_revenue.png
+│   └── revenue_by_day.png
+│
+├── sales_analysis.py
+├── requirements.txt
+├── .gitignore
+└── README.md
+```
+
+## How to Run
+
+Install the required libraries:
 
 ```bash
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
+```
+
+Download the Online Retail dataset from the UCI Machine Learning Repository and place:
+
+```text
+Online Retail.xlsx
+```
+
+inside the:
+
+```text
+data/
+```
+
+folder.
+
+Then run:
+
+```bash
+python3 sales_analysis.py
+```
+
+## What I Learned
+
+Through this project, I practised working with a large real-world dataset and learned how to follow a basic data analysis workflow:
+
+* Loading data
+* Inspecting data quality
+* Cleaning invalid records
+* Creating new variables
+* Grouping and aggregating data
+* Analysing time-based trends
+* Creating visualisations
+* Interpreting business results
+
+I also gained more practical experience with Pandas functions such as `groupby()`, `drop_duplicates()`, filtering, sorting, aggregation and datetime operations.
+
+## Future Improvements
+
+I plan to continue improving this project by adding:
+
+* Customer segmentation
+* RFM analysis
+* More statistical analysis
+* Interactive Power BI dashboards
+* A Streamlit dashboard
+* Basic machine learning techniques
